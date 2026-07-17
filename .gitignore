@@ -43,3 +43,6 @@ bin/
 .DS_Store
 
 SPEC.md
+cache/
+work/
+jres/

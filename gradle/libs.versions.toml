@@ -1,0 +1,21 @@
+[versions]
+picocli = "4.7.7"
+gson = "2.14.0"
+snakeyaml = "2.6"
+mappingIo = "0.8.0"
+tinyRemapper = "0.14.0"
+stitch = "0.6.2"
+vineflower = "1.11.2"
+junit = "6.0.0"
+
+[libraries]
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+mapping-io = { module = "net.fabricmc:mapping-io", version.ref = "mappingIo" }
+tiny-remapper = { module = "net.fabricmc:tiny-remapper", version.ref = "tinyRemapper" }
+stitch = { module = "net.fabricmc:stitch", version.ref = "stitch" }
+vineflower = { module = "org.vineflower:vineflower", version.ref = "vineflower" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }

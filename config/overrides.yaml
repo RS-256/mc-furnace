@@ -1,0 +1,7 @@
+# Manual ordering corrections.
+# piston-meta releaseTime is authoritative; entries here override the value
+# used for SORTING ONLY (the recorded releaseTime stays as published).
+#
+# releaseTimeOverrides:
+#   "1.16.5-rc1": "2021-01-08T12:00:00+00:00"
+releaseTimeOverrides: {}

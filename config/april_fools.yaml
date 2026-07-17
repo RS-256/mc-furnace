@@ -1,0 +1,13 @@
+# April fools versions: excluded from releases/snapshots and
+# committed to a dead-end af/<id> branch whose parent is the commit of `base`
+# on the snapshots branch. Scope is 2020 and later only (1.14.4+).
+- id: "20w14infinite"           # Infinity snapshot (2020)
+  base: "20w13b"
+- id: "22w13oneblockatatime"    # (2022)
+  base: "22w13a"
+- id: "23w13a_or_b"             # The Vote Update (2023)
+  base: "23w13a"
+- id: "24w14potato"             # Poisonous Potato Update (2024)
+  base: "24w12a"
+- id: "25w14craftmine"          # Craftmine (2025)
+  base: "25w13a"

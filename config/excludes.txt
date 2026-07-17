@@ -1,0 +1,32 @@
+# Paths excluded from the generated tree (SPEC 3.3 / 4.6).
+# Glob patterns matched against forward-slash paths relative to the tree root.
+# Lines starting with ! re-include a previously excluded path; the last
+# matching pattern wins (gitignore-like).
+
+# binary assets
+**/*.png
+**/*.png.mcmeta
+**/*.ogg
+**/*.ttf
+**/*.otf
+**/*.unihex
+**/*.zip
+**/*.bin
+**/*.icns
+**/*.ico
+**/*.nbt
+**/*.snbt.bin
+**/*.jfr
+**/*.dat
+
+# whole binary-only trees
+assets/*/textures/**
+assets/*/sounds/**
+assets/*/font/**
+
+# languages other than en_us
+assets/*/lang/**
+!assets/*/lang/en_us.json
+
+# jar-internal markers
+**/.mcassetsroot

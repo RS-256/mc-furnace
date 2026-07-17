@@ -1,0 +1,220 @@
+package net.rs256.furnace.pipe;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import net.rs256.furnace.BuildInfo;
+import net.rs256.furnace.FurnaceConfig;
+import net.rs256.furnace.InterruptHandler;
+import net.rs256.furnace.cfg.ExcludeList;
+import net.rs256.furnace.meta.VersionDetail;
+import net.rs256.furnace.net.Downloader;
+import net.rs256.furnace.util.ClasspathJars;
+import net.rs256.furnace.util.MoreFiles;
+
+/**
+ * SPEC 4.1: the full per-version flow. All intermediates live under
+ * work/<id>/ and are deleted by the caller after a successful commit
+ * (SPEC 4.5: one version = one transaction).
+ */
+public final class Pipeline {
+
+    private static final Gson GSON = new Gson();
+
+    private final FurnaceConfig config;
+    private final Downloader downloader;
+    private final ExcludeList excludes;
+    private final List<String[]> decompilerOptions;
+    private final VersionJsonWriter.Toolchain toolchain;
+
+    public Pipeline(FurnaceConfig config, Downloader downloader) throws IOException {
+        this.config = config;
+        this.downloader = downloader;
+        this.excludes = ExcludeList.load(config.configDir().resolve("excludes.txt"));
+        this.decompilerOptions =
+                Decompile.loadOptions(config.configDir().resolve("decompiler.properties"));
+        this.toolchain =
+                VersionJsonWriter.Toolchain.current(
+                        ClasspathJars.findVersion("vineflower"),
+                        ClasspathJars.findVersion("stitch"),
+                        BuildInfo.load());
+    }
+
+    public VersionJsonWriter.Toolchain toolchain() {
+        return toolchain;
+    }
+
+    public static String sanitizeId(String id) {
+        return id.replace('/', '-');
+    }
+
+    /** Runs steps 1-7 for one version and returns the assembled output tree. */
+    public Path generate(VersionDetail detail) throws IOException, InterruptedException {
+        String id = detail.id();
+        Path work = MoreFiles.freshDirectory(config.workDir().resolve(sanitizeId(id)));
+        Path out = Files.createDirectories(work.resolve("out"));
+        Path jarCache = config.cacheDir().resolve("jars").resolve(sanitizeId(id));
+
+        log(id, "downloading jars and mappings");
+        VersionDetail.DownloadInfo client = detail.requireDownload("client");
+        VersionDetail.DownloadInfo server = detail.requireDownload("server");
+        VersionDetail.DownloadInfo clientMap = detail.requireDownload("client_mappings");
+        VersionDetail.DownloadInfo serverMap = detail.requireDownload("server_mappings");
+        Path clientJar = downloader.fetch(client.url(), jarCache.resolve("client.jar"), client.sha1());
+        Path serverJar = downloader.fetch(server.url(), jarCache.resolve("server.jar"), server.sha1());
+        Path clientTxt = downloader.fetch(clientMap.url(), jarCache.resolve("client.txt"), clientMap.sha1());
+        Path serverTxt = downloader.fetch(serverMap.url(), jarCache.resolve("server.txt"), serverMap.sha1());
+        List<Path> libraries = downloadLibraries(detail);
+        InterruptHandler.checkAbort();
+
+        log(id, "converting mappings");
+        var clientTree = Mappings.readProguard(clientTxt);
+        var serverTree = Mappings.readProguard(serverTxt);
+        Path clientTiny = Mappings.writeTiny(clientTree, work.resolve("client.tiny"));
+        Path serverTiny = Mappings.writeTiny(serverTree, work.resolve("server.tiny"));
+        InterruptHandler.checkAbort();
+
+        log(id, "unpacking server jar");
+        boolean bundler = isBundler(serverJar);
+        Path serverInner =
+                ServerBundle.extract(serverJar, work, Mappings.officialClassNames(serverTree));
+        InterruptHandler.checkAbort();
+
+        log(id, "remapping client");
+        Path clientNamed = work.resolve("client-named.jar");
+        Remap.remap(clientJar, clientNamed, clientTiny, libraries);
+        InterruptHandler.checkAbort();
+
+        log(id, "remapping server");
+        Path serverNamed = work.resolve("server-named.jar");
+        Remap.remap(serverInner, serverNamed, serverTiny, libraries);
+        InterruptHandler.checkAbort();
+
+        log(id, "merging client and server");
+        Path merged = work.resolve("merged.jar");
+        Merge.merge(clientNamed, serverNamed, merged);
+        InterruptHandler.checkAbort();
+
+        log(id, "decompiling (this takes a few minutes)");
+        List<String> decompileErrors =
+                Decompile.run(
+                        merged,
+                        out.resolve("src"),
+                        decompilerOptions,
+                        libraries,
+                        config.decompilerHeap(),
+                        work);
+        InterruptHandler.checkAbort();
+
+        log(id, "extracting data/ and assets/");
+        Extract.extractPrefix(serverInner, "data/", out, excludes);
+        Extract.extractPrefix(clientJar, "assets/", out, excludes);
+        InterruptHandler.checkAbort();
+
+        if (config.reportsEnabled()) {
+            log(id, "running data generator (--reports)");
+            Reports.run(config, detail, serverJar, bundler, work, out.resolve("reports"));
+            InterruptHandler.checkAbort();
+        }
+        if (!decompileErrors.isEmpty()) {
+            Files.createDirectories(out.resolve("reports"));
+            Files.writeString(
+                    out.resolve("reports").resolve("decompile_errors.txt"),
+                    String.join("\n", decompileErrors) + "\n",
+                    StandardCharsets.UTF_8);
+        }
+
+        log(id, "writing version.json");
+        int[] versions = readClientVersionNumbers(clientJar);
+        VersionJsonWriter.write(
+                out.resolve("version.json"),
+                detail,
+                versions == null ? null : versions[0],
+                versions == null ? null : versions[1],
+                toolchain);
+        writeTreeBoilerplate(out);
+        return out;
+    }
+
+    private List<Path> downloadLibraries(VersionDetail detail) throws IOException, InterruptedException {
+        List<VersionDetail.Artifact> artifacts = new ArrayList<>();
+        if (detail.libraries() != null) {
+            for (VersionDetail.Library library : detail.libraries()) {
+                if (library.downloads() != null && library.downloads().artifact() != null) {
+                    artifacts.add(library.downloads().artifact());
+                }
+            }
+        }
+        Path libCache = config.cacheDir().resolve("libraries");
+        List<Path> result = new ArrayList<>();
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<Path>> futures = new ArrayList<>();
+            for (VersionDetail.Artifact artifact : artifacts) {
+                futures.add(
+                        executor.submit(
+                                () ->
+                                        downloader.fetch(
+                                                artifact.url(),
+                                                libCache.resolve(artifact.path()),
+                                                artifact.sha1())));
+            }
+            for (Future<Path> future : futures) {
+                try {
+                    result.add(future.get());
+                } catch (java.util.concurrent.ExecutionException e) {
+                    if (e.getCause() instanceof IOException io) {
+                        throw io;
+                    }
+                    if (e.getCause() instanceof RuntimeException re) {
+                        throw re;
+                    }
+                    throw new IOException("library download failed", e.getCause());
+                }
+            }
+        }
+        result.sort(java.util.Comparator.comparing(Path::toString));
+        return result;
+    }
+
+    private static boolean isBundler(Path serverJar) throws IOException {
+        try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(serverJar.toFile())) {
+            return zip.getEntry("META-INF/versions.list") != null;
+        }
+    }
+
+    /** Reads world/protocol versions from the version.json inside the client jar. */
+    private static int[] readClientVersionNumbers(Path clientJar) throws IOException {
+        byte[] raw = Extract.readEntry(clientJar, "version.json");
+        if (raw == null) {
+            return null;
+        }
+        JsonObject json = GSON.fromJson(new String(raw, StandardCharsets.UTF_8), JsonObject.class);
+        if (!json.has("world_version") || !json.has("protocol_version")) {
+            return null;
+        }
+        return new int[] {json.get("world_version").getAsInt(), json.get("protocol_version").getAsInt()};
+    }
+
+    private static void writeTreeBoilerplate(Path out) throws IOException {
+        Files.writeString(
+                out.resolve(".gitattributes"),
+                "* text eol=lf\n",
+                StandardCharsets.UTF_8);
+        Files.writeString(
+                out.resolve(".gitignore"),
+                ".DS_Store\nThumbs.db\n",
+                StandardCharsets.UTF_8);
+    }
+
+    private static void log(String id, String message) {
+        System.out.println("[furnace] " + id + ": " + message);
+    }
+}
