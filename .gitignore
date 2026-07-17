@@ -43,3 +43,7 @@ SPEC.md
 cache/
 work/
 jres/
+
+# personal configuration (shared defaults stay tracked)
+config/furnace.local.properties
+config/jres.properties

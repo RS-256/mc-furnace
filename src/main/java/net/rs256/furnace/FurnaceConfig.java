@@ -22,7 +22,9 @@ public record FurnaceConfig(
         Map<Integer, Path> jres) {
 
     public static FurnaceConfig load(Path configDir) {
+        // Committed shared defaults, overlaid by the gitignored personal file.
         Properties props = loadProps(configDir.resolve("furnace.properties"));
+        props.putAll(loadProps(configDir.resolve("furnace.local.properties")));
         Map<Integer, Path> jres = new LinkedHashMap<>();
         Path jresFile = configDir.resolve("jres.properties");
         if (Files.exists(jresFile)) {

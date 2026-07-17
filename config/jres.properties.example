@@ -1,0 +1,11 @@
+# Java runtimes for the data generator step.
+# Copy this file to jres.properties (gitignored) and point each required Java
+# major version to a java executable on your machine. When a required major
+# has no entry and the current JVM is same or newer, the current JVM is used
+# as a fallback; when it is older, the version fails with an error.
+#
+# 8  = C:/jres/jdk8/bin/java.exe
+# 16 = C:/jres/jdk16/bin/java.exe
+# 17 = C:/jres/jdk17/bin/java.exe
+# 21 = C:/jres/jdk21/bin/java.exe
+# 25 = C:/jres/jdk25/bin/java.exe

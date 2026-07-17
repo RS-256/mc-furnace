@@ -71,14 +71,15 @@ git show af/24w14potato        # what the april fools build changed
 
 ## Configuration files (`config/`)
 
-| File                    | Purpose                                             |
-|-------------------------|-----------------------------------------------------|
-| `furnace.properties`    | paths, manifest URL, decompiler heap, scope start   |
-| `decompiler.properties` | explicit Vineflower options (determinism)           |
-| `april_fools.yaml`      | april fools ids + their `af/` branch base versions  |
-| `excludes.txt`          | tree exclusion globs (binaries, non-en_us langs)    |
-| `overrides.yaml`        | manual releaseTime sort corrections                 |
-| `jres.properties`       | Java runtimes per required major (data generator)   |
+| File                       | Purpose                                                                                               |
+|----------------------------|-------------------------------------------------------------------------------------------------------|
+| `furnace.properties`       | shared defaults: paths, manifest URL, heap, scope start                                               |
+| `furnace.local.properties` | **gitignored** personal overrides for any key above                                                   |
+| `decompiler.properties`    | explicit Vineflower options (determinism)                                                             |
+| `april_fools.yaml`         | april fools ids + their `af/` branch base versions                                                    |
+| `excludes.txt`             | tree exclusion globs (binaries, non-en_us langs)                                                      |
+| `overrides.yaml`           | manual releaseTime sort corrections                                                                   |
+| `jres.properties`          | **gitignored** Java runtimes per required major (data generator); copy from `jres.properties.example` |
 
 ## Determinism policy
 
