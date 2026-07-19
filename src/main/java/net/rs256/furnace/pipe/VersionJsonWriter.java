@@ -18,10 +18,11 @@ public final class VersionJsonWriter {
     private VersionJsonWriter() {}
 
     public record Toolchain(String decompiler, String mappings, String merger, String pipelineCommit) {
-        public static Toolchain current(String vineflowerVersion, String stitchVersion, BuildInfo build) {
+        public static Toolchain current(
+                String vineflowerVersion, String stitchVersion, BuildInfo build, String mappings) {
             return new Toolchain(
                     "vineflower-" + vineflowerVersion,
-                    "mojang-official",
+                    mappings,
                     "stitch@" + stitchVersion,
                     "mc-furnace@" + build.pipelineCommit());
         }

@@ -42,7 +42,7 @@ public class RegenCommand implements Callable<Integer> {
         }
 
         VersionDetail detail = ctx.meta().detail(ctx.meta().requireEntry(versionId));
-        Path regenerated = ctx.pipeline().generate(detail);
+        Path regenerated = ctx.pipeline().generate(detail).tree();
 
         Path checkout =
                 ctx.config().workDir().resolve("regen-checkout-" + Pipeline.sanitizeId(versionId));

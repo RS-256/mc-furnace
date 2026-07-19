@@ -33,7 +33,9 @@ public final class Pipeline {
     private final Downloader downloader;
     private final ExcludeList excludes;
     private final List<String[]> decompilerOptions;
-    private final VersionJsonWriter.Toolchain toolchain;
+    private final String vineflowerVersion;
+    private final String stitchVersion;
+    private final BuildInfo buildInfo;
 
     public Pipeline(FurnaceConfig config, Downloader downloader) throws IOException {
         this.config = config;
@@ -41,66 +43,84 @@ public final class Pipeline {
         this.excludes = ExcludeList.load(config.configDir().resolve("excludes.txt"));
         this.decompilerOptions =
                 Decompile.loadOptions(config.configDir().resolve("decompiler.properties"));
-        this.toolchain =
-                VersionJsonWriter.Toolchain.current(
-                        ClasspathJars.findVersion("vineflower"),
-                        ClasspathJars.findVersion("stitch"),
-                        BuildInfo.load());
+        this.vineflowerVersion = ClasspathJars.findVersion("vineflower");
+        this.stitchVersion = ClasspathJars.findVersion("stitch");
+        this.buildInfo = BuildInfo.load();
     }
 
-    public VersionJsonWriter.Toolchain toolchain() {
-        return toolchain;
-    }
+    /** One generated version: the assembled tree plus the toolchain that produced it. */
+    public record Generated(Path tree, VersionJsonWriter.Toolchain toolchain) {}
 
     public static String sanitizeId(String id) {
         return id.replace('/', '-');
     }
 
     /** Runs steps 1-7 for one version and returns the assembled output tree. */
-    public Path generate(VersionDetail detail) throws IOException, InterruptedException {
+    public Generated generate(VersionDetail detail) throws IOException, InterruptedException {
         String id = detail.id();
         Path work = MoreFiles.freshDirectory(config.workDir().resolve(sanitizeId(id)));
         Path out = Files.createDirectories(work.resolve("out"));
         Path jarCache = config.cacheDir().resolve("jars").resolve(sanitizeId(id));
 
-        log(id, "downloading jars and mappings");
+        // From the 26.1 line on, Mojang ships unobfuscated jars and no longer
+        // publishes mappings; remapping is unnecessary then.
+        boolean mapped = detail.hasMojangMappings();
+        log(id, mapped ? "downloading jars and mappings" : "downloading jars");
         VersionDetail.DownloadInfo client = detail.requireDownload("client");
         VersionDetail.DownloadInfo server = detail.requireDownload("server");
-        VersionDetail.DownloadInfo clientMap = detail.requireDownload("client_mappings");
-        VersionDetail.DownloadInfo serverMap = detail.requireDownload("server_mappings");
         Path clientJar = downloader.fetch(client.url(), jarCache.resolve("client.jar"), client.sha1());
         Path serverJar = downloader.fetch(server.url(), jarCache.resolve("server.jar"), server.sha1());
-        Path clientTxt = downloader.fetch(clientMap.url(), jarCache.resolve("client.txt"), clientMap.sha1());
-        Path serverTxt = downloader.fetch(serverMap.url(), jarCache.resolve("server.txt"), serverMap.sha1());
         List<Path> libraries = downloadLibraries(detail);
         InterruptHandler.checkAbort();
 
-        log(id, "converting mappings");
-        var clientTree = Mappings.readProguard(clientTxt);
-        var serverTree = Mappings.readProguard(serverTxt);
-        Path clientTiny = Mappings.writeTiny(clientTree, work.resolve("client.tiny"));
-        Path serverTiny = Mappings.writeTiny(serverTree, work.resolve("server.tiny"));
-        InterruptHandler.checkAbort();
+        if (!mapped && !isUnobfuscated(clientJar)) {
+            throw new SkipVersionException(
+                    "no Mojang mappings published and the jar is obfuscated (e.g. 19w34a/19w35a); out of scope");
+        }
 
-        log(id, "unpacking server jar");
         boolean bundler = isBundler(serverJar);
-        Path serverInner =
-                ServerBundle.extract(serverJar, work, Mappings.officialClassNames(serverTree));
-        InterruptHandler.checkAbort();
+        Path clientForMerge;
+        Path serverForMerge;
+        Path serverInner; // raw inner jar, keeps data/ resources for extraction
+        if (mapped) {
+            VersionDetail.DownloadInfo clientMap = detail.requireDownload("client_mappings");
+            VersionDetail.DownloadInfo serverMap = detail.requireDownload("server_mappings");
+            Path clientTxt =
+                    downloader.fetch(clientMap.url(), jarCache.resolve("client.txt"), clientMap.sha1());
+            Path serverTxt =
+                    downloader.fetch(serverMap.url(), jarCache.resolve("server.txt"), serverMap.sha1());
 
-        log(id, "remapping client");
-        Path clientNamed = work.resolve("client-named.jar");
-        Remap.remap(clientJar, clientNamed, clientTiny, libraries);
-        InterruptHandler.checkAbort();
+            log(id, "converting mappings");
+            var clientTree = Mappings.readProguard(clientTxt);
+            var serverTree = Mappings.readProguard(serverTxt);
+            Path clientTiny = Mappings.writeTiny(clientTree, work.resolve("client.tiny"));
+            Path serverTiny = Mappings.writeTiny(serverTree, work.resolve("server.tiny"));
+            InterruptHandler.checkAbort();
 
-        log(id, "remapping server");
-        Path serverNamed = work.resolve("server-named.jar");
-        Remap.remap(serverInner, serverNamed, serverTiny, libraries);
-        InterruptHandler.checkAbort();
+            log(id, "unpacking server jar");
+            serverInner = ServerBundle.extract(serverJar, work, Mappings.officialClassNames(serverTree));
+            InterruptHandler.checkAbort();
+
+            log(id, "remapping client");
+            clientForMerge = work.resolve("client-named.jar");
+            Remap.remap(clientJar, clientForMerge, clientTiny, libraries);
+            InterruptHandler.checkAbort();
+
+            log(id, "remapping server");
+            serverForMerge = work.resolve("server-named.jar");
+            Remap.remap(serverInner, serverForMerge, serverTiny, libraries);
+            InterruptHandler.checkAbort();
+        } else {
+            log(id, "jars ship unobfuscated; skipping remap");
+            serverInner = ServerBundle.extract(serverJar, work, java.util.Set.of());
+            clientForMerge = clientJar;
+            serverForMerge = serverInner;
+            InterruptHandler.checkAbort();
+        }
 
         log(id, "merging client and server");
         Path merged = work.resolve("merged.jar");
-        Merge.merge(clientNamed, serverNamed, merged);
+        Merge.merge(clientForMerge, serverForMerge, merged);
         InterruptHandler.checkAbort();
 
         log(id, "decompiling (this takes a few minutes)");
@@ -133,6 +153,12 @@ public final class Pipeline {
         }
 
         log(id, "writing version.json");
+        VersionJsonWriter.Toolchain toolchain =
+                VersionJsonWriter.Toolchain.current(
+                        vineflowerVersion,
+                        stitchVersion,
+                        buildInfo,
+                        mapped ? "mojang-official" : "unobfuscated");
         int[] versions = readClientVersionNumbers(clientJar);
         VersionJsonWriter.write(
                 out.resolve("version.json"),
@@ -141,18 +167,16 @@ public final class Pipeline {
                 versions == null ? null : versions[1],
                 toolchain);
         writeTreeBoilerplate(out);
-        return out;
+        return new Generated(out, toolchain);
+    }
+
+    /** Unobfuscated builds keep real class names; Minecraft.class is a stable probe. */
+    private static boolean isUnobfuscated(Path clientJar) throws IOException {
+        return Extract.readEntry(clientJar, "net/minecraft/client/Minecraft.class") != null;
     }
 
     private List<Path> downloadLibraries(VersionDetail detail) throws IOException, InterruptedException {
-        List<VersionDetail.Artifact> artifacts = new ArrayList<>();
-        if (detail.libraries() != null) {
-            for (VersionDetail.Library library : detail.libraries()) {
-                if (library.downloads() != null && library.downloads().artifact() != null) {
-                    artifacts.add(library.downloads().artifact());
-                }
-            }
-        }
+        java.util.Collection<VersionDetail.Artifact> artifacts = dedupeArtifacts(detail.libraries());
         Path libCache = config.cacheDir().resolve("libraries");
         List<Path> result = new ArrayList<>();
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -182,6 +206,25 @@ public final class Pipeline {
         }
         result.sort(java.util.Comparator.comparing(Path::toString));
         return result;
+    }
+
+    /**
+     * Old manifests list the same artifact under several library entries
+     * (e.g. lwjgl main + natives variants sharing one jar); deduplicate by
+     * path so concurrent downloads never race on the same target file.
+     */
+    static java.util.Collection<VersionDetail.Artifact> dedupeArtifacts(
+            List<VersionDetail.Library> libraries) {
+        java.util.Map<String, VersionDetail.Artifact> byPath = new java.util.LinkedHashMap<>();
+        if (libraries != null) {
+            for (VersionDetail.Library library : libraries) {
+                if (library.downloads() != null && library.downloads().artifact() != null) {
+                    VersionDetail.Artifact artifact = library.downloads().artifact();
+                    byPath.putIfAbsent(artifact.path(), artifact);
+                }
+            }
+        }
+        return byPath.values();
     }
 
     private static boolean isBundler(Path serverJar) throws IOException {

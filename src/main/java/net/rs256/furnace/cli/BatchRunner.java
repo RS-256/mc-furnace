@@ -108,8 +108,16 @@ public final class BatchRunner {
         }
 
         VersionDetail detail = ctx.meta().detail(planned.entry());
-        Path tree = ctx.pipeline().generate(detail);
-        String body = commitBody(ctx.pipeline().toolchain());
+        Pipeline.Generated generated;
+        try {
+            generated = ctx.pipeline().generate(detail);
+        } catch (net.rs256.furnace.pipe.SkipVersionException e) {
+            System.out.println("[furnace] " + id + ": skipped; " + e.getMessage());
+            MoreFiles.deleteRecursively(ctx.config().workDir().resolve(Pipeline.sanitizeId(id)));
+            return false;
+        }
+        Path tree = generated.tree();
+        String body = commitBody(generated.toolchain());
 
         if (planned.isAprilFools()) {
             String branch = "af/" + id;

@@ -22,6 +22,17 @@ public record VersionDetail(
 
     public record Artifact(String path, String sha1, String url) {}
 
+    /**
+     * Mojang published obfuscation maps from 1.14.4 (releases) / 19w36a
+     * (snapshots) until the 26.1 line, when obfuscation itself was dropped
+     * and the maps disappeared again.
+     */
+    public boolean hasMojangMappings() {
+        return downloads != null
+                && downloads.containsKey("client_mappings")
+                && downloads.containsKey("server_mappings");
+    }
+
     public DownloadInfo requireDownload(String key) {
         DownloadInfo info = downloads == null ? null : downloads.get(key);
         if (info == null) {
