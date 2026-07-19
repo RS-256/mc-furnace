@@ -51,10 +51,11 @@ public final class TerraRepo {
     }
 
     /** After a forced kill the worktree may be dirty; hard reset before resuming. */
-    public void recoverIfDirty() {
+    public void recoverIfDirty() throws IOException {
         if (!Files.isDirectory(root.resolve(".git"))) {
             return;
         }
+        ensureLocalExcludes();
         String status = git.run("status", "--porcelain");
         if (status.isBlank()) {
             return;
@@ -65,7 +66,32 @@ public final class TerraRepo {
         } else {
             git.tryRun("rm", "-r", "--cached", ".");
         }
-        git.run("clean", "-fdx");
+        // -x is deliberately absent: locally excluded files (IDE metadata) survive
+        git.run("clean", "-fd");
+    }
+
+    /**
+     * Local-only ignores (.git/info/exclude): lets users open mc-terra in an
+     * IDE without the recovery cleanup deleting IDE metadata. Not part of the
+     * committed tree, so generated content stays deterministic.
+     */
+    private void ensureLocalExcludes() throws IOException {
+        Path exclude = root.resolve(".git").resolve("info").resolve("exclude");
+        List<String> wanted = List.of(".idea/", "*.iml", ".vscode/");
+        List<String> existing = Files.exists(exclude) ? Files.readAllLines(exclude) : List.of();
+        StringBuilder missing = new StringBuilder();
+        for (String line : wanted) {
+            if (!existing.contains(line)) {
+                missing.append(line).append('\n');
+            }
+        }
+        if (!missing.isEmpty()) {
+            Files.createDirectories(exclude.getParent());
+            Files.writeString(
+                    exclude,
+                    (existing.isEmpty() ? "" : String.join("\n", existing) + "\n") + missing,
+                    java.nio.charset.StandardCharsets.UTF_8);
+        }
     }
 
     public boolean branchExists(String branch) {
