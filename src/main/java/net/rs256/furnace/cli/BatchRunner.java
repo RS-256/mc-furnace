@@ -118,6 +118,15 @@ public final class BatchRunner {
         }
         Path tree = generated.tree();
         String body = commitBody(generated.toolchain());
+        // Self-document manual ordering corrections in the commit body; the
+        // subject keeps the fixed parseable "<id> (<releaseTime>)" format.
+        // Only the snapshots branch is reordered by overrides, so only its
+        // commits carry the note; releases stay chronological as published.
+        String sortOverride = ctx.overrides().releaseTimeOverrides().get(id);
+        String snapshotsBody =
+                sortOverride == null
+                        ? body
+                        : body + "\nsort-time: " + sortOverride + " (manual order override)";
 
         if (planned.isAprilFools()) {
             String branch = "af/" + id;
@@ -129,7 +138,13 @@ public final class BatchRunner {
                 System.out.println("[furnace] " + id + ": committing to " + TerraRepo.SNAPSHOTS);
                 ctx.terra()
                         .commitVersion(
-                                TerraRepo.SNAPSHOTS, null, tree, id, releaseTime, body, !planned.isRelease());
+                                TerraRepo.SNAPSHOTS,
+                                null,
+                                tree,
+                                id,
+                                releaseTime,
+                                snapshotsBody,
+                                !planned.isRelease());
                 takenSnapshots.add(id);
             }
             if (planned.isRelease() && !takenReleases.contains(id)) {

@@ -57,7 +57,12 @@ versions are detected from repository history and skipped.
 
 Branch history is append-only and ordered by `releaseTime`; inserting an older
 version requires rebuilding the history. Commit author and committer dates are
-set to that version's `releaseTime`.
+set to that version's `releaseTime`. When a version's sort position is
+manually corrected via `config/overrides.yaml` (old-line hotfixes published
+mid-snapshot-cycle), its `snapshots`-branch commit body records a
+`sort-time: <time> (manual order override)` line; the subject, the recorded
+`releaseTime`, and the `releases` branch (which needs no reordering) stay as
+published.
 
 ## Branch layout of mc-terra
 
