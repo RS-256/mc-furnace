@@ -70,6 +70,31 @@ set to that version's `releaseTime`.
 Tags carry the version id (`1.21.1`, `24w14a`; `/` replaced by `-`). Releases
 are tagged on `releases`, snapshots on `snapshots`.
 
+### April fools versions - manual list, update it BEFORE ingesting
+
+April fools versions are dead-end implementations that the next real snapshot
+does not inherit. If one lands in the linear `snapshots` history, the two
+diffs at its boundary degrade into "joke content added" / "joke content
+reverted", so furnace isolates them on `af/<id>` branches instead.
+
+piston-meta serves them as plain `"type": "snapshot"`, so **they cannot be
+detected automatically**: they are listed by hand in
+`config/april_fools.yaml`. Mojang has shipped one nearly every year
+(20w14infinite, 22w13oneblockatatime, 23w13a_or_b, 24w14potato,
+25w14craftmine, 26w14a, ...), typically published around April 1st.
+
+Operational rules:
+
+- **When a new april fools version appears, add it to
+  `config/april_fools.yaml` before running `furnace update` / `backfill`.**
+  If it slips through, it is committed to `snapshots` as a regular version
+  and removing it afterward requires history modifying (replaying every later
+  commit and retargeting their tags).
+- `base` is the release/snapshot with the closest earlier `releaseTime` on
+  the `snapshots` branch - not necessarily a snapshot (25w14craftmine's base
+  is the release `1.21.5`). Verify it against piston-meta before committing
+  the entry.
+
 ## Recommended git settings for browsing mc-terra
 
 ```bash
@@ -107,5 +132,5 @@ Tool versions are pinned via the Gradle version catalog and dependency lock
 file, Vineflower options are fully explicit, and output uses LF / UTF-8 /
 sorted file iteration. `furnace regen <id>` re-generates a version and diffs
 it against the existing commit to verify bit-identical output. When upgrading
-the decompiler, regenerate the whole history onto a fresh orphan branch —
+the decompiler, regenerate the whole history onto a fresh orphan branch -
 mixing decompiler versions mid-history is forbidden.

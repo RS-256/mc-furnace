@@ -10,4 +10,6 @@
 - id: "24w14potato"             # Poisonous Potato Update (2024)
   base: "24w12a"
 - id: "25w14craftmine"          # Craftmine (2025)
-  base: "25w13a"
+  base: "1.21.5"                # no snapshot between 1.21.5 and craftmine
+- id: "26w14a"                  # (2026)
+  base: "26.1.1"
