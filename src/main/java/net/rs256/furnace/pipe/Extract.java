@@ -11,9 +11,9 @@ import java.util.zip.ZipFile;
 import net.rs256.furnace.cfg.ExcludeList;
 
 /**
- * SPEC 4.1 step 5: extracts data/ from the server jar and text-only assets/
+ * Extracts data/ from the server jar and text-only assets/
  * from the client jar, applying config/excludes.txt. Bytes are copied
- * verbatim; determinism follows from the fixed jar contents (SPEC 4.3).
+ * verbatim; determinism follows from the fixed jar contents.
  */
 public final class Extract {
 

@@ -2,8 +2,7 @@
 
 Pipeline that builds **mc-terra**: a private Git repository holding decompiled
 Minecraft (Java Edition) sources and data files, one version per commit, so any
-two versions can be compared with plain `git diff`. See [SPEC.md](SPEC.md) for
-the full specification.
+two versions can be compared with plain `git diff`.
 
 > **Legal note:** Mojang's official mappings are licensed for reference
 > purposes only. The generated `mc-terra` repository contains decompiled
@@ -16,6 +15,9 @@ the full specification.
   version suffices, see `config/jres.properties` for exact-version pinning)
 - `git` on PATH
 - Network access to piston-meta / Mojang download servers
+
+Minecraft 1.14.4 and later are supported. Earlier versions do not provide the
+Mojang mappings required by this pipeline and are outside its scope.
 
 ## Build & run
 
@@ -38,6 +40,24 @@ Interrupting a batch with Ctrl+C stops at a safe boundary; the second Ctrl+C
 forces an immediate exit. Both are safe: a version only counts as ingested
 once its commit exists, so **re-running the same command resumes** where the
 batch stopped.
+
+## Generation model
+
+For each version, furnace downloads and SHA1-verifies the client, server, and
+Mojang mapping files; unpacks bundled servers when necessary; remaps and merges
+the client and server; decompiles the merged jar with Vineflower; extracts
+`data/` and text-only `assets/`; runs the vanilla data generator for `reports/`;
+and writes `version.json` before committing the result.
+
+The generated tree contains `src/`, `data/`, `assets/`, `reports/`, and a
+`version.json` file recording the Minecraft and toolchain metadata. Temporary
+files are isolated under `work/<version-id>/`. A commit is the transaction
+boundary: incomplete work is discarded on the next run, while completed
+versions are detected from repository history and skipped.
+
+Branch history is append-only and ordered by `releaseTime`; inserting an older
+version requires rebuilding the history. Commit author and committer dates are
+set to that version's `releaseTime`.
 
 ## Branch layout of mc-terra
 
@@ -88,4 +108,4 @@ file, Vineflower options are fully explicit, and output uses LF / UTF-8 /
 sorted file iteration. `furnace regen <id>` re-generates a version and diffs
 it against the existing commit to verify bit-identical output. When upgrading
 the decompiler, regenerate the whole history onto a fresh orphan branch —
-mixing decompiler versions mid-history is forbidden (SPEC 4.3).
+mixing decompiler versions mid-history is forbidden.

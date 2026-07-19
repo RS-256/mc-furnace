@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * SIGINT handling (SPEC 4.5): first signal requests a graceful stop at the
+ * SIGINT handling: the first signal requests a graceful stop at the
  * next safe boundary (and terminates killable child processes such as the
  * decompiler); second signal exits immediately. Git operations run inside a
  * critical section during which the stop is deferred.

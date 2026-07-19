@@ -16,7 +16,7 @@ import net.rs256.furnace.plan.Planner;
 import net.rs256.furnace.util.MoreFiles;
 
 /**
- * Shared engine for update/backfill/add (SPEC 4.4 / 4.5): computes the pending
+ * Shared engine for update/backfill/add: computes the pending
  * set (planned minus already committed), processes versions oldest first, and
  * treats each version as one transaction so re-running the same command
  * resumes after an interruption.
@@ -144,7 +144,7 @@ public final class BatchRunner {
     }
 
     /**
-     * Branches are strictly append-only in releaseTime order (SPEC 3.2);
+     * Branches are strictly append-only in releaseTime order;
      * inserting an older version on top of a newer head would corrupt the
      * timeline, so it is refused.
      */
@@ -166,7 +166,7 @@ public final class BatchRunner {
                                 + branch
                                 + "' ("
                                 + head
-                                + "). History is append-only (SPEC 4.3: rebuild history to insert).");
+                                + "). History is append-only; rebuild it to insert an older version.");
                 return false;
             }
         }

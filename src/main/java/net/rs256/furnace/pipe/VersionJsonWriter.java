@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import net.rs256.furnace.BuildInfo;
 import net.rs256.furnace.meta.VersionDetail;
 
-/** SPEC 3.4: writes the per-commit version.json with a stable key order. */
+/** Writes the per-commit version.json with a stable key order. */
 public final class VersionJsonWriter {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();

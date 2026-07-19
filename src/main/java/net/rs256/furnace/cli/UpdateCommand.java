@@ -7,7 +7,7 @@ import net.rs256.furnace.plan.Planner;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ParentCommand;
 
-/** SPEC 4.4: ingests every version the manifest has that mc-terra lacks. */
+/** Ingests every version the manifest has that mc-terra lacks. */
 @Command(
         name = "update",
         description = "Ingest all versions from the manifest that are not committed yet.")

@@ -12,7 +12,7 @@ import net.rs256.furnace.InterruptHandler;
 import net.rs256.furnace.util.MoreFiles;
 
 /**
- * The generated mc-terra repository (SPEC 3): releases/snapshots branches, one
+ * The generated mc-terra repository: releases/snapshots branches, one
  * version per commit, commit dates pinned to releaseTime, af/<id> dead-end
  * branches for april fools versions.
  */
@@ -44,13 +44,13 @@ public final class TerraRepo {
         git.run("config", "core.autocrlf", "false");
         git.run("config", "core.longpaths", "true");
         git.run("config", "commit.gpgsign", "false");
-        // recommended diff settings (SPEC 5)
+        // Recommended diff settings documented in README.
         git.run("config", "diff.renames", "true");
         git.run("config", "diff.algorithm", "histogram");
         System.out.println("[furnace] initialized mc-terra repository at " + root);
     }
 
-    /** SPEC 4.5: after a forced kill the worktree may be dirty; hard reset before resuming. */
+    /** After a forced kill the worktree may be dirty; hard reset before resuming. */
     public void recoverIfDirty() {
         if (!Files.isDirectory(root.resolve(".git"))) {
             return;
@@ -76,7 +76,7 @@ public final class TerraRepo {
         return git.tryRun("rev-parse", "--verify", "--quiet", "refs/tags/" + tag);
     }
 
-    /** Version ids already committed on a branch, parsed from commit subjects (SPEC 4.5). */
+    /** Version ids already committed on a branch, parsed from commit subjects. */
     public Set<String> takenIds(String branch) {
         Set<String> ids = new LinkedHashSet<>();
         if (!branchExists(branch)) {
@@ -137,7 +137,7 @@ public final class TerraRepo {
     }
 
     /**
-     * SPEC 3.2 / 4.5: replaces the branch worktree with {@code tree} and
+     * Replaces the branch worktree with {@code tree} and
      * commits with author/committer dates pinned to releaseTime. The whole
      * git section runs inside the interrupt critical section.
      */

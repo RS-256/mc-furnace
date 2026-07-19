@@ -64,7 +64,7 @@ class TerraRepoTest {
         assertEquals("1.21 (2024-06-13T08:24:03+00:00)", head);
         assertEquals("2024-06-13T08:24:03+00:00", TerraRepo.parseSubjectTime(head));
 
-        // author date is pinned to releaseTime (SPEC 3.2)
+        // Author date is pinned to releaseTime.
         GitRunner git = new GitRunner(tmp.resolve("terra"));
         String authorDate = git.run("log", "-1", "--format=%aI", TerraRepo.SNAPSHOTS).strip();
         assertEquals(

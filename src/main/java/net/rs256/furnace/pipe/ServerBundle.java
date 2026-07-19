@@ -15,7 +15,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 /**
- * SPEC 4.1 step 1: unpacks the bundled server jar (1.18+ bundler format).
+ * Unpacks the bundled server jar (1.18+ bundler format).
  * For the legacy layout (libraries shaded into server.jar) the jar is
  * filtered down to the classes covered by the server mappings plus non-class
  * resources, so shaded libraries never reach the merged jar.

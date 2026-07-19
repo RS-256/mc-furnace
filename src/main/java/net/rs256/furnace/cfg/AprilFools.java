@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
-/** april_fools.yaml: exclusion list + af/ branch base definitions (SPEC 3.2.1). */
+/** april_fools.yaml: exclusion list and af/ branch base definitions. */
 public record AprilFools(Map<String, String> baseById) {
 
     public static AprilFools load(Path file) {

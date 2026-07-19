@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 /**
  * Locates tool jars on the application classpath. The distribution places all
  * dependencies in lib/, so tool versions can be derived from jar file names
- * for version.json (SPEC 3.4).
+ * for version.json.
  */
 public final class ClasspathJars {
 

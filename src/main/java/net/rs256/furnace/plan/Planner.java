@@ -9,10 +9,10 @@ import net.rs256.furnace.cfg.Overrides;
 import net.rs256.furnace.meta.VersionManifest;
 
 /**
- * Turns the piston-meta manifest into the ordered work list (SPEC 4.4):
+ * Turns the piston-meta manifest into the ordered work list:
  * releases and snapshots from the scope start onward, sorted by releaseTime
- * (with manual overrides, SPEC 6), april fools versions flagged for af/
- * branches (SPEC 3.2.1).
+ * (with manual overrides), with april fools versions flagged for af/
+ * branches.
  */
 public final class Planner {
 

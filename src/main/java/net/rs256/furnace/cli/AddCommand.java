@@ -8,7 +8,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
 
-/** SPEC 4.4: generates and commits a single version. */
+/** Generates and commits a single version. */
 @Command(name = "add", description = "Generate and commit one version.")
 public class AddCommand implements Callable<Integer> {
 
@@ -38,7 +38,7 @@ public class AddCommand implements Callable<Integer> {
                             + versionId
                             + "' is not in scope (unknown id, or older than "
                             + ctx.config().scopeFrom()
-                            + ", SPEC: 1.14.4+ only)");
+                            + "; see README \"Requirements\")");
             return 2;
         }
         BatchRunner runner = new BatchRunner(ctx);

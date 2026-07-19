@@ -12,8 +12,8 @@ import net.rs256.furnace.util.MoreFiles;
 import net.rs256.furnace.util.Procs;
 
 /**
- * SPEC 4.1 step 6: runs the vanilla data generator (--reports) with a Java
- * runtime matching the version's requirement (SPEC 6) and copies
+ * Runs the vanilla data generator (--reports) with a Java runtime matching the
+ * version's requirement and copies
  * generated/reports into the output tree.
  */
 public final class Reports {

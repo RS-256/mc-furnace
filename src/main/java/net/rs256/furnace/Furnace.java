@@ -13,7 +13,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /**
- * Standalone CLI entry point (SPEC 4.2.1 / 4.4). Built with the Gradle
+ * Standalone CLI entry point. Built with the Gradle
  * application plugin; run via build/install/furnace/bin/furnace.
  */
 @Command(

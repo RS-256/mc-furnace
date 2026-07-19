@@ -9,9 +9,9 @@ import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.TinyUtils;
 
 /**
- * SPEC 4.1 step 2: remaps a jar from official (obfuscated) to named using
+ * Remaps a jar from official (obfuscated) to named using
  * tiny-remapper. Non-class resources are intentionally not copied; data and
- * assets are extracted from the original jars instead (SPEC 4.1 step 5).
+ * assets are extracted from the original jars instead.
  */
 public final class Remap {
 

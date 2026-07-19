@@ -21,9 +21,9 @@ import net.rs256.furnace.util.ClasspathJars;
 import net.rs256.furnace.util.MoreFiles;
 
 /**
- * SPEC 4.1: the full per-version flow. All intermediates live under
+ * The full per-version flow. All intermediates live under
  * work/<id>/ and are deleted by the caller after a successful commit
- * (SPEC 4.5: one version = one transaction).
+ * so one version forms one transaction.
  */
 public final class Pipeline {
 

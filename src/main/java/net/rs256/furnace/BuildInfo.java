@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Properties;
 
-/** Build-time metadata embedded by Gradle (pipeline commit SHA, SPEC 3.4). */
+/** Build-time metadata embedded by Gradle, including the pipeline commit SHA. */
 public record BuildInfo(String furnaceVersion, String pipelineCommit) {
 
     public static BuildInfo load() {

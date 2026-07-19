@@ -19,8 +19,8 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
 
 /**
- * SPEC 4.4: regenerates a version and compares it against the committed tree,
- * verifying reproducibility (SPEC 2: bit-identical regeneration).
+ * Regenerates a version and compares it against the committed tree, verifying
+ * bit-identical reproducibility.
  */
 @Command(name = "regen", description = "Regenerate a version and diff it against the existing commit.")
 public class RegenCommand implements Callable<Integer> {

@@ -17,9 +17,9 @@ import net.rs256.furnace.util.ClasspathJars;
 import net.rs256.furnace.util.Procs;
 
 /**
- * SPEC 4.1 step 4: decompiles the merged jar with Vineflower launched as a
- * separate process (SPEC 4.2: heap isolation, terminate on graceful stop).
- * All options come from config/decompiler.properties (SPEC 4.3).
+ * Decompiles the merged jar with Vineflower launched as a separate process for
+ * heap isolation and termination on graceful stop. All options come from
+ * config/decompiler.properties.
  */
 public final class Decompile {
 
@@ -123,7 +123,7 @@ public final class Decompile {
         return List.copyOf(lines);
     }
 
-    /** Parses decompiler.properties preserving file order (SPEC 4.6). */
+    /** Parses decompiler.properties preserving file order. */
     public static List<String[]> loadOptions(Path propertiesFile) throws IOException {
         List<String[]> options = new ArrayList<>();
         if (!Files.exists(propertiesFile)) {

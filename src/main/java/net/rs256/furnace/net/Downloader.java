@@ -14,7 +14,7 @@ import net.rs256.furnace.InterruptHandler;
 import net.rs256.furnace.util.Hashes;
 
 /**
- * SHA1-verified downloads with a persistent cache (SPEC 4.5): a partially
+ * SHA1-verified downloads with a persistent cache: a partially
  * downloaded file fails verification and is re-fetched; verified files are
  * reused across runs.
  */

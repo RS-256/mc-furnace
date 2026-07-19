@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
-/** overrides.yaml: manual releaseTime corrections used for sorting only (SPEC 6). */
+/** overrides.yaml: manual releaseTime corrections used for sorting only. */
 public record Overrides(Map<String, String> releaseTimeOverrides) {
 
     public static Overrides load(Path file) {

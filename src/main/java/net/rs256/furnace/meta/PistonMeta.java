@@ -10,7 +10,7 @@ import net.rs256.furnace.net.Downloader;
 /**
  * piston-meta client. The manifest is fetched fresh on every run and mirrored
  * into the cache so add/regen keep working offline; per-version json files are
- * cached by SHA1 (SPEC 4.1).
+ * cached by SHA1.
  */
 public final class PistonMeta {
 

@@ -37,7 +37,8 @@ public record VersionDetail(
         DownloadInfo info = downloads == null ? null : downloads.get(key);
         if (info == null) {
             throw new IllegalStateException(
-                    "version " + id + " has no '" + key + "' download; Mojang mappings are required (SPEC scope: 1.14.4+)");
+                    "version " + id + " has no '" + key
+                            + "' download; Mojang mappings are required (supported versions start at 1.14.4; see README)");
         }
         return info;
     }

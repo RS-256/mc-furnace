@@ -54,7 +54,7 @@ public final class AppContext {
     }
 
     /**
-     * Startup housekeeping (SPEC 4.5): initialize/repair the terra repo and
+     * Startup housekeeping: initialize/repair the terra repo and
      * remove leftover intermediates from a previous abnormal exit.
      */
     public void prepare(boolean initRepo) throws IOException {

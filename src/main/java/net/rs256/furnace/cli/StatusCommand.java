@@ -11,7 +11,7 @@ import net.rs256.furnace.plan.Planner;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ParentCommand;
 
-/** SPEC 4.4: shows ingested/pending/interrupted state. Read-only. */
+/** Shows ingested, pending, and interrupted state without modifying it. */
 @Command(name = "status", description = "Show ingested, pending, and interrupted state.")
 public class StatusCommand implements Callable<Integer> {
 
@@ -35,7 +35,7 @@ public class StatusCommand implements Callable<Integer> {
         List<String> afBranches = ctx.terra().afBranches();
         System.out.println("af branches: " + (afBranches.isEmpty() ? "(none)" : String.join(", ", afBranches)));
 
-        // leftover intermediates indicate an interrupted run (SPEC 4.5)
+        // Leftover intermediates indicate an interrupted run.
         if (Files.isDirectory(ctx.config().workDir())) {
             try (var entries = Files.newDirectoryStream(ctx.config().workDir())) {
                 for (var entry : entries) {

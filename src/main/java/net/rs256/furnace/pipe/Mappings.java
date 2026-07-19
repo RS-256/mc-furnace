@@ -16,8 +16,7 @@ import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
 /**
  * Converts Mojang ProGuard mappings (named -> official) into tiny v2 files
- * with 'official' as the source namespace, ready for tiny-remapper
- * (SPEC 4.1 step 2, SPEC 4.2).
+ * with 'official' as the source namespace, ready for tiny-remapper.
  */
 public final class Mappings {
 

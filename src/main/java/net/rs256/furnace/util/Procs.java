@@ -41,7 +41,7 @@ public final class Procs {
     /**
      * Runs a long, killable process (decompiler / data generator), streaming its
      * combined output to {@code logFile}. The process is registered with the
-     * interrupt handler so a graceful stop terminates it (SPEC 4.5).
+     * interrupt handler so a graceful stop terminates it.
      */
     public static int runKillable(Path workingDir, List<String> command, Path logFile)
             throws IOException, InterruptedException {

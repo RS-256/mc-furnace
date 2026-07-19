@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 /**
  * excludes.txt: gitignore-like glob patterns matched against forward-slash
  * paths relative to the tree root; the last matching pattern wins, lines
- * starting with '!' re-include (SPEC 3.3 / 4.6).
+ * starting with '!' re-include.
  */
 public final class ExcludeList {
 

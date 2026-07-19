@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.mapping.io)
     implementation(libs.tiny.remapper)
     implementation(libs.stitch)
-    // Vineflower is launched as a separate process (SPEC 4.2); the dependency is
+    // Vineflower is launched as a separate process; the dependency is
     // declared only so its jar is placed into the distribution's lib directory.
     implementation(libs.vineflower)
 
@@ -49,7 +49,7 @@ application {
     mainClass = "net.rs256.furnace.Furnace"
 }
 
-// Embed the pipeline git commit SHA so it can be recorded in version.json (SPEC 3.4).
+// Embed the pipeline git commit SHA so it can be recorded in version.json.
 val generateBuildInfo = tasks.register("generateBuildInfo") {
     val outDir = layout.buildDirectory.dir("generated/buildinfo")
     outputs.dir(outDir)

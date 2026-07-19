@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import net.fabricmc.stitch.merge.JarMerger;
 
 /**
- * SPEC 4.1 step 3: merges the named client and server jars into one, adding
+ * Merges the named client and server jars into one, adding
  * side annotations to client-/server-only classes and members.
  */
 public final class Merge {

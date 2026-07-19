@@ -8,7 +8,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 
-/** SPEC 4.4: bulk generation of past versions; interruptible and resumable (SPEC 4.5). */
+/** Bulk generation of past versions; interruptible and resumable. */
 @Command(name = "backfill", description = "Generate all versions from a starting version onward.")
 public class BackfillCommand implements Callable<Integer> {
 
