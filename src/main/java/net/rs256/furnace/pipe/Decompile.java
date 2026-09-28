@@ -123,7 +123,11 @@ public final class Decompile {
         return List.copyOf(lines);
     }
 
-    /** Parses decompiler.properties preserving file order. */
+    /**
+     * Parses decompiler.properties preserving file order. Values are trimmed;
+     * wrap a value in double quotes to keep leading or trailing whitespace
+     * (needed for whitespace-only options such as ind).
+     */
     public static List<String[]> loadOptions(Path propertiesFile) throws IOException {
         List<String[]> options = new ArrayList<>();
         if (!Files.exists(propertiesFile)) {
@@ -138,7 +142,14 @@ public final class Decompile {
             if (eq < 0) {
                 throw new IOException("invalid decompiler option line: " + raw);
             }
-            options.add(new String[] {line.substring(0, eq).strip(), line.substring(eq + 1).strip()});
+            String value = line.substring(eq + 1).strip();
+            if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
+            }
+            if (value.isEmpty()) {
+                throw new IOException("empty decompiler option value: " + raw);
+            }
+            options.add(new String[] {line.substring(0, eq).strip(), value});
         }
         return options;
     }
