@@ -161,7 +161,8 @@ public final class BatchRunner {
     /**
      * Branches are strictly append-only in releaseTime order;
      * inserting an older version on top of a newer head would corrupt the
-     * timeline, so it is refused.
+     * timeline, so it is refused. The snapshots branch is ordered by sort time
+     * (overrides applied on both sides); releases stay in published order.
      */
     private boolean checkAppendOrder(Planner.Planned planned) {
         for (String branch :
@@ -170,9 +171,14 @@ public final class BatchRunner {
                         : List.of(TerraRepo.SNAPSHOTS)) {
             String head = ctx.terra().headSubject(branch);
             String headTime = head == null ? null : TerraRepo.parseSubjectTime(head);
+            boolean bySortTime = branch.equals(TerraRepo.SNAPSHOTS);
+            if (headTime != null && bySortTime) {
+                headTime = ctx.overrides().sortTime(TerraRepo.parseSubjectId(head), headTime);
+            }
+            OffsetDateTime time =
+                    bySortTime ? planned.sortTime() : OffsetDateTime.parse(planned.entry().releaseTime());
             if (headTime != null
-                    && OffsetDateTime.parse(planned.entry().releaseTime())
-                            .isBefore(OffsetDateTime.parse(headTime))
+                    && time.isBefore(OffsetDateTime.parse(headTime))
                     && needsBranch(planned, branch)) {
                 System.out.println(
                         "[furnace] "

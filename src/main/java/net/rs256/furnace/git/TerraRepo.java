@@ -157,7 +157,7 @@ public final class TerraRepo {
         return (open > 0 && close > open + 2) ? subject.substring(open + 2, close) : null;
     }
 
-    static String parseSubjectId(String subject) {
+    public static String parseSubjectId(String subject) {
         int paren = subject.indexOf(" (");
         return paren > 0 ? subject.substring(0, paren) : null;
     }
