@@ -42,6 +42,7 @@ bin/
 SPEC.md
 cache/
 work/
+generated/
 jres/
 
 # personal configuration (shared defaults stay tracked)

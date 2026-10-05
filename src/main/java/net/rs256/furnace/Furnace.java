@@ -3,6 +3,7 @@ package net.rs256.furnace;
 import java.nio.file.Path;
 import net.rs256.furnace.cli.AddCommand;
 import net.rs256.furnace.cli.BackfillCommand;
+import net.rs256.furnace.cli.GenerateCommand;
 import net.rs256.furnace.cli.RegenCommand;
 import net.rs256.furnace.cli.StatusCommand;
 import net.rs256.furnace.cli.UpdateCommand;
@@ -26,6 +27,7 @@ import picocli.CommandLine.Spec;
             AddCommand.class,
             RegenCommand.class,
             BackfillCommand.class,
+            GenerateCommand.class,
             StatusCommand.class
         })
 public final class Furnace implements Runnable {
