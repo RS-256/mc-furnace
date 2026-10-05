@@ -41,13 +41,14 @@ public final class AppContext {
         try {
             FurnaceConfig config = FurnaceConfig.load(configDir);
             Downloader downloader = new Downloader();
+            Overrides overrides = Overrides.load(configDir.resolve("overrides.yaml"));
             return new AppContext(
                     config,
                     new PistonMeta(downloader, config.manifestUrl(), config.cacheDir()),
                     new TerraRepo(config.terraRepo()),
                     AprilFools.load(configDir.resolve("april_fools.yaml")),
-                    Overrides.load(configDir.resolve("overrides.yaml")),
-                    new Pipeline(config, downloader));
+                    overrides,
+                    new Pipeline(config, downloader, overrides));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

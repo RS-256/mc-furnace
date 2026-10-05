@@ -44,6 +44,13 @@ tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
 }
 
+val datagenLauncher = sourceSets.create("datagenLauncher")
+
+tasks.named<JavaCompile>(datagenLauncher.compileJavaTaskName) {
+    options.release = 8
+    options.compilerArgs.add("-Xlint:-options")
+}
+
 application {
     applicationName = "furnace"
     mainClass = "net.rs256.furnace.Furnace"
@@ -85,6 +92,15 @@ val generateBuildInfo = tasks.register("generateBuildInfo") {
 
 sourceSets.main {
     resources.srcDir(generateBuildInfo)
+    runtimeClasspath += datagenLauncher.output
+}
+
+sourceSets.test {
+    runtimeClasspath += datagenLauncher.output
+}
+
+tasks.jar {
+    from(datagenLauncher.output)
 }
 
 tasks.test {

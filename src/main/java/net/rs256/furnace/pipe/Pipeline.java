@@ -15,6 +15,7 @@ import net.rs256.furnace.BuildInfo;
 import net.rs256.furnace.FurnaceConfig;
 import net.rs256.furnace.InterruptHandler;
 import net.rs256.furnace.cfg.ExcludeList;
+import net.rs256.furnace.cfg.Overrides;
 import net.rs256.furnace.meta.VersionDetail;
 import net.rs256.furnace.net.Downloader;
 import net.rs256.furnace.util.ClasspathJars;
@@ -31,15 +32,17 @@ public final class Pipeline {
 
     private final FurnaceConfig config;
     private final Downloader downloader;
+    private final Overrides overrides;
     private final ExcludeList excludes;
     private final List<String[]> decompilerOptions;
     private final String vineflowerVersion;
     private final String stitchVersion;
     private final BuildInfo buildInfo;
 
-    public Pipeline(FurnaceConfig config, Downloader downloader) throws IOException {
+    public Pipeline(FurnaceConfig config, Downloader downloader, Overrides overrides) throws IOException {
         this.config = config;
         this.downloader = downloader;
+        this.overrides = overrides;
         this.excludes = ExcludeList.load(config.configDir().resolve("excludes.txt"));
         this.decompilerOptions =
                 Decompile.loadOptions(config.configDir().resolve("decompiler.properties"));
@@ -141,7 +144,15 @@ public final class Pipeline {
 
         if (config.reportsEnabled()) {
             log(id, "running data generator (--reports)");
-            Reports.run(config, detail, serverJar, bundler, work, out.resolve("reports"));
+            try {
+                Reports.run(config, detail, serverJar, bundler, work, out.resolve("reports"));
+            } catch (Reports.DatagenFailedException e) {
+                if (!overrides.skipReportsOnDatagenFailure().contains(id)) {
+                    throw e;
+                }
+                log(id, "data generator crashed; continuing without reports (overrides.yaml)");
+                writeDatagenFailure(out.resolve("reports"), e);
+            }
             InterruptHandler.checkAbort();
         }
         if (!decompileErrors.isEmpty()) {
@@ -168,6 +179,17 @@ public final class Pipeline {
                 toolchain);
         writeTreeBoilerplate(out);
         return new Generated(out, toolchain);
+    }
+
+    /** Records a tolerated datagen crash in place of the reports it prevented. */
+    private static void writeDatagenFailure(Path reports, Reports.DatagenFailedException e)
+            throws IOException {
+        Files.createDirectories(reports);
+        String text =
+                "The data generator crashed for this version, no reports were generated.\n"
+                        + "Listed under skipReportsOnDatagenFailure in mc-furnace config/overrides.yaml.\n"
+                        + (e.excerpt() == null ? "" : "\n" + e.excerpt());
+        Files.writeString(reports.resolve("datagen_failed.txt"), text, StandardCharsets.UTF_8);
     }
 
     /** Unobfuscated builds keep real class names; Minecraft.class is a stable probe. */

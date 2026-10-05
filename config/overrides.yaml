@@ -21,3 +21,19 @@ releaseTimeOverrides:
   "26.1.2-rc-1":     "2026-04-02T00:00:00+00:00"
   "26.1.2":          "2026-04-02T01:00:00+00:00"
   # 26.2-snapshot-1: "2026-04-07T11:52:43+00:00"
+
+# Versions whose data generator (--reports) crashes for an upstream reason.
+# Only a crash of the data generator itself is tolerated: the version is then
+# committed without reports/ (reports/datagen_failed.txt records the failure).
+# Any other failure, or a datagen crash on an unlisted version, stops the run.
+skipReportsOnDatagenFailure:
+  # 23w07a: vanilla bug, fixed in 1.19.4-pre1.
+  # The first report provider, BiomeParametersDumpReport, encodes the overworld
+  # preset. That preset references minecraft:cherry_grove, but the lookup it
+  # receives is the vanilla registry one, where cherry_grove does not exist
+  # (only UpdateOneTwentyRegistries has it):
+  #   IllegalStateException: Missing element
+  #     ResourceKey[minecraft:worldgen/biome / minecraft:cherry_grove]
+  # Only biome_parameters/minecraft/nether.json is written; the remaining
+  # providers (overworld.json, blocks, commands, registries) never run.
+  - "23w07a"
