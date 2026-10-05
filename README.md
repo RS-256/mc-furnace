@@ -24,10 +24,10 @@ Mojang mappings required by this pipeline and are outside its scope.
 ```bash
 ./gradlew installDist                                    # build the CLI
 build/install/furnace/bin/furnace status                 # ingested / pending overview
-build/install/furnace/bin/furnace add 1.21.10            # generate + commit one version
+build/install/furnace/bin/furnace add 26.3               # generate + commit one version
 build/install/furnace/bin/furnace update                 # ingest everything new
 build/install/furnace/bin/furnace backfill --from 1.14.4 # bulk-generate history
-build/install/furnace/bin/furnace regen 1.21.10          # reproducibility check
+build/install/furnace/bin/furnace regen 26.3             # reproducibility check
 build/install/furnace/bin/furnace generate 23w07a        # generate only, no commit
 ```
 
